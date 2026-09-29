@@ -4,6 +4,7 @@
       {
         "event": "run_started",
         "data": {
+          "run_id": "run-1234",
           "question": "Can I return my opened headphones after 20 days?",
           "chaos": true
         }
@@ -24,7 +25,7 @@
       {
         "event": "draft",
         "data": {
-          "text": "Yes, you can return them.\nOpened electronics can be returned within 30 days.\nWe hope this helps!"
+          "text": "Opened electronics can be returned within 30 days."
         }
       },
       {
@@ -34,21 +35,9 @@
           "claims": [
             {
               "id": 0,
-              "text": "Yes, you can return them.",
-              "start": 0,
-              "end": 25
-            },
-            {
-              "id": 1,
               "text": "Opened electronics can be returned within 30 days.",
-              "start": 26,
-              "end": 76
-            },
-            {
-              "id": 2,
-              "text": "We hope this helps!",
-              "start": 77,
-              "end": 96
+              "start": 0,
+              "end": 50
             }
           ]
         }
@@ -59,25 +48,9 @@
           "attempt": 0,
           "claim": {
             "id": 0,
-            "text": "Yes, you can return them.",
-            "start": 0,
-            "end": 25,
-            "status": "SUPPORTED",
-            "checked_by": "deterministic",
-            "reason": "Non-factual sentence",
-            "evidence": []
-          }
-        }
-      },
-      {
-        "event": "claim_checked",
-        "data": {
-          "attempt": 0,
-          "claim": {
-            "id": 1,
             "text": "Opened electronics can be returned within 30 days.",
-            "start": 26,
-            "end": 76,
+            "start": 0,
+            "end": 50,
             "status": "CONTRADICTED",
             "checked_by": "deterministic",
             "reason": "Policy says 15 days.",
@@ -93,22 +66,6 @@
         }
       },
       {
-        "event": "claim_checked",
-        "data": {
-          "attempt": 0,
-          "claim": {
-            "id": 2,
-            "text": "We hope this helps!",
-            "start": 77,
-            "end": 96,
-            "status": "SUPPORTED",
-            "checked_by": "deterministic",
-            "reason": "Non-factual sentence",
-            "evidence": []
-          }
-        }
-      },
-      {
         "event": "correcting",
         "data": {
           "attempt": 1,
@@ -119,13 +76,50 @@
         "event": "corrected_draft",
         "data": {
           "attempt": 1,
-          "text": "Yes, you can return them.\nOpened electronics can be returned within 15 days.\nWe hope this helps!"
+          "text": "Opened electronics can be returned within 15 days, so a 20-day-old purchase is outside the return window."
+        }
+      },
+      {
+        "event": "claims",
+        "data": {
+          "attempt": 1,
+          "claims": [
+            {
+              "id": 0,
+              "text": "Opened electronics can be returned within 15 days, so a 20-day-old purchase is outside the return window.",
+              "start": 0,
+              "end": 105
+            }
+          ]
+        }
+      },
+      {
+        "event": "claim_checked",
+        "data": {
+          "attempt": 1,
+          "claim": {
+            "id": 0,
+            "text": "Opened electronics can be returned within 15 days, so a 20-day-old purchase is outside the return window.",
+            "start": 0,
+            "end": 105,
+            "status": "SUPPORTED",
+            "checked_by": "deterministic",
+            "reason": "Matches policy exactly and restates customer quantity.",
+            "evidence": [
+              {
+                "source": "refund_policy.md",
+                "version": "v2",
+                "text": "Opened electronics can be returned within 15 days.",
+                "chunk_id": "refund_policy.md#2"
+              }
+            ]
+          }
         }
       },
       {
         "event": "final",
         "data": {
-          "answer": "Yes, you can return them.\nOpened electronics can be returned within 15 days.\nWe hope this helps!",
+          "answer": "Opened electronics can be returned within 15 days, so a 20-day-old purchase is outside the return window.",
           "status": "CORRECTED",
           "abstain_reason": null
         }
@@ -137,23 +131,13 @@
             "run_id": "run-1234",
             "question": "Can I return my opened headphones after 20 days?",
             "chaos": true,
-            "draft": "Yes, you can return them.\nOpened electronics can be returned within 30 days.\nWe hope this helps!",
+            "draft": "Opened electronics can be returned within 30 days.",
             "claims": [
               {
                 "id": 0,
-                "text": "Yes, you can return them.",
-                "start": 0,
-                "end": 25,
-                "status": "SUPPORTED",
-                "checked_by": "deterministic",
-                "reason": "Non-factual sentence",
-                "evidence": []
-              },
-              {
-                "id": 1,
                 "text": "Opened electronics can be returned within 30 days.",
-                "start": 26,
-                "end": 76,
+                "start": 0,
+                "end": 50,
                 "status": "CONTRADICTED",
                 "checked_by": "deterministic",
                 "reason": "Policy says 15 days.",
@@ -165,38 +149,18 @@
                     "chunk_id": "refund_policy.md#2"
                   }
                 ]
-              },
-              {
-                "id": 2,
-                "text": "We hope this helps!",
-                "start": 77,
-                "end": 96,
-                "status": "SUPPORTED",
-                "checked_by": "deterministic",
-                "reason": "Non-factual sentence",
-                "evidence": []
               }
             ],
-            "final_draft": "Yes, you can return them.\nOpened electronics can be returned within 15 days.\nWe hope this helps!",
+            "final_draft": "Opened electronics can be returned within 15 days, so a 20-day-old purchase is outside the return window.",
             "final_claims": [
               {
                 "id": 0,
-                "text": "Yes, you can return them.",
+                "text": "Opened electronics can be returned within 15 days, so a 20-day-old purchase is outside the return window.",
                 "start": 0,
-                "end": 25,
+                "end": 105,
                 "status": "SUPPORTED",
                 "checked_by": "deterministic",
-                "reason": "Non-factual sentence",
-                "evidence": []
-              },
-              {
-                "id": 1,
-                "text": "Opened electronics can be returned within 15 days.",
-                "start": 26,
-                "end": 76,
-                "status": "SUPPORTED",
-                "checked_by": "deterministic",
-                "reason": "Matches policy exactly.",
+                "reason": "Matches policy exactly and restates customer quantity.",
                 "evidence": [
                   {
                     "source": "refund_policy.md",
@@ -205,19 +169,9 @@
                     "chunk_id": "refund_policy.md#2"
                   }
                 ]
-              },
-              {
-                "id": 2,
-                "text": "We hope this helps!",
-                "start": 77,
-                "end": 96,
-                "status": "SUPPORTED",
-                "checked_by": "deterministic",
-                "reason": "Non-factual sentence",
-                "evidence": []
               }
             ],
-            "final_answer": "Yes, you can return them.\nOpened electronics can be returned within 15 days.\nWe hope this helps!",
+            "final_answer": "Opened electronics can be returned within 15 days, so a 20-day-old purchase is outside the return window.",
             "final_status": "CORRECTED",
             "abstain_reason": null,
             "retries": 1,
@@ -245,6 +199,7 @@
       {
         "event": "run_started",
         "data": {
+          "run_id": "run-1235",
           "question": "Can I get a refund?",
           "chaos": false
         }
@@ -388,6 +343,7 @@
       {
         "event": "run_started",
         "data": {
+          "run_id": "run-1236",
           "question": "Do you offer drone delivery?",
           "chaos": false
         }
@@ -395,7 +351,32 @@
       {
         "event": "retrieved",
         "data": {
-          "evidence": []
+          "evidence": [
+            {
+              "source": "shipping_policy.md",
+              "version": "v1",
+              "text": "Standard shipping takes 3-5 business days.",
+              "chunk_id": "shipping_policy.md#1"
+            },
+            {
+              "source": "shipping_policy.md",
+              "version": "v1",
+              "text": "Express shipping is available for an extra fee.",
+              "chunk_id": "shipping_policy.md#2"
+            },
+            {
+              "source": "payments_policy.md",
+              "version": "v1",
+              "text": "We accept all major credit cards.",
+              "chunk_id": "payments_policy.md#1"
+            },
+            {
+              "source": "payments_policy.md",
+              "version": "v1",
+              "text": "Cash on delivery is not supported.",
+              "chunk_id": "payments_policy.md#2"
+            }
+          ]
         }
       },
       {

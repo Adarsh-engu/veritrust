@@ -38,9 +38,41 @@ def test_events_json_validates():
             event_name = item["event"]
             event_data = item["data"]
             model = event_models[event_name]
-            # Validate that the model can be instantiated from the data without error
             instance = model(**event_data)
             assert instance is not None
+            
+            # Additional test: run_started requires run_id
+            if event_name == "run_started":
+                assert hasattr(instance, "run_id") and instance.run_id is not None
+
+def test_events_json_scenario_structure():
+    """the corrected scenario has claims and claim_checked with attempt 1 before final; every scenario ends with exactly one final and run_finished last"""
+    mocks_path = os.path.join(os.path.dirname(__file__), "../../frontend/mocks/events.json")
+    with open(mocks_path, "r") as f:
+        data = json.load(f)
+        
+    for scenario_name, events in data["scenarios"].items():
+        event_names = [e["event"] for e in events]
+        assert event_names[-2] == "final"
+        assert event_names[-1] == "run_finished"
+        assert event_names.count("final") == 1
+        
+        if scenario_name == "corrected":
+            # Find index of final
+            final_idx = event_names.index("final")
+            
+            # Check for claims and claim_checked with attempt 1 before final
+            found_claims_attempt_1 = False
+            found_claim_checked_attempt_1 = False
+            
+            for e in events[:final_idx]:
+                if e["event"] == "claims" and e["data"]["attempt"] == 1:
+                    found_claims_attempt_1 = True
+                if e["event"] == "claim_checked" and e["data"]["attempt"] == 1:
+                    found_claim_checked_attempt_1 = True
+                    
+            assert found_claims_attempt_1
+            assert found_claim_checked_attempt_1
 
 def test_claim_text_matches_draft_span():
     """Claim.text == draft[start:end] for every claim in the RunResult"""
@@ -48,16 +80,17 @@ def test_claim_text_matches_draft_span():
     with open(mocks_path, "r") as f:
         data = json.load(f)
         
-    for item in data["scenarios"]["corrected"]:
-        if item["event"] == "run_finished":
-            run_result_data = item["data"]["result"]
-            run_result = RunResult(**run_result_data)
-            
-            for claim in run_result.claims:
-                assert claim.text == run_result.draft[claim.start:claim.end]
+    for scenario_name, events in data["scenarios"].items():
+        for item in events:
+            if item["event"] == "run_finished":
+                run_result_data = item["data"]["result"]
+                run_result = RunResult(**run_result_data)
                 
-            for claim in run_result.final_claims:
-                assert claim.text == run_result.final_draft[claim.start:claim.end]
+                for claim in run_result.claims:
+                    assert claim.text == run_result.draft[claim.start:claim.end]
+                    
+                for claim in run_result.final_claims:
+                    assert claim.text == run_result.final_draft[claim.start:claim.end]
 
 def test_bad_span_is_rejected():
     """a deliberately bad span is rejected"""

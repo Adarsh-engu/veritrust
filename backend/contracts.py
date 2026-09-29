@@ -101,6 +101,7 @@ class RunResult(BaseModel):
 # SSE Event Models
 class RunStartedEvent(BaseModel):
     """Event indicating a run has started."""
+    run_id: str
     question: str
     chaos: bool
 
