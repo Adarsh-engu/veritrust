@@ -1,0 +1,84 @@
+"use client";
+
+import React, { useState } from "react";
+import { Header } from "@/components/Header";
+import { Timeline } from "@/components/Timeline";
+import { CustomerQuestion } from "@/components/CustomerQuestion";
+import { DocumentReview } from "@/components/DocumentReview";
+import { EvidenceRail } from "@/components/EvidenceRail";
+import { getScenarioRunResult, ScenarioKey } from "@/lib/mockEvents";
+
+export default function ReviewPage() {
+  const [currentScenario, setCurrentScenario] = useState<ScenarioKey>("corrected");
+  const [viewMode, setViewMode] = useState<"reviewer" | "customer">("reviewer");
+  const [chaosActive, setChaosActive] = useState<boolean>(true);
+  const [selectedClaimId, setSelectedClaimId] = useState<string | null>("ref-01");
+
+  // Load the current scenario run result from frozen mocks/events.json
+  const runResult = React.useMemo(() => {
+    return getScenarioRunResult(currentScenario);
+  }, [currentScenario]);
+
+  const handleScenarioChange = (scenario: ScenarioKey) => {
+    setCurrentScenario(scenario);
+    if (scenario === "corrected") {
+      setChaosActive(true);
+    } else {
+      setChaosActive(false);
+    }
+    setSelectedClaimId("ref-01");
+  };
+
+  const handleChaosToggle = () => {
+    setChaosActive((prev) => !prev);
+  };
+
+  const handleSelectClaim = (id: string) => {
+    setSelectedClaimId(id);
+  };
+
+  return (
+    <div className="bg-[#faf8f0] text-on-surface antialiased font-sans h-screen flex flex-col overflow-hidden">
+      {/* Top minimal navigation bar matching Stitch */}
+      <Header
+        activeTab="review"
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        chaosActive={chaosActive}
+        onChaosToggle={handleChaosToggle}
+        currentScenario={currentScenario}
+        onScenarioChange={handleScenarioChange}
+      />
+
+      {/* Main three-column workspace */}
+      <main className="flex-1 flex overflow-hidden">
+        {/* Column 1: Left minimal timeline */}
+        <Timeline runResult={runResult} />
+
+        {/* Column 2: Dominant central document */}
+        <section className="flex-1 overflow-y-auto px-8 py-8 flex flex-col items-center bg-[#fff8f0]">
+          <div className="w-full max-w-[720px] flex flex-col gap-6">
+            <CustomerQuestion
+              question={runResult.question}
+              isChaos={chaosActive}
+            />
+
+            <DocumentReview
+              runResult={runResult}
+              viewMode={viewMode}
+              onSelectClaim={handleSelectClaim}
+              selectedClaimId={selectedClaimId}
+            />
+          </div>
+        </section>
+
+        {/* Column 3: Right evidence & claims rail */}
+        <EvidenceRail
+          runResult={runResult}
+          selectedClaimId={selectedClaimId}
+          onCardClick={handleSelectClaim}
+        />
+      </main>
+    </div>
+  );
+}
