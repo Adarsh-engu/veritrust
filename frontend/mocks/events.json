@@ -1,0 +1,501 @@
+{
+  "scenarios": {
+    "corrected": [
+      {
+        "event": "run_started",
+        "data": {
+          "question": "Can I return my opened headphones after 20 days?",
+          "chaos": true
+        }
+      },
+      {
+        "event": "retrieved",
+        "data": {
+          "evidence": [
+            {
+              "source": "refund_policy.md",
+              "version": "v2",
+              "text": "Opened electronics can be returned within 15 days.",
+              "chunk_id": "refund_policy.md#2"
+            }
+          ]
+        }
+      },
+      {
+        "event": "draft",
+        "data": {
+          "text": "Yes, you can return them.\nOpened electronics can be returned within 30 days.\nWe hope this helps!"
+        }
+      },
+      {
+        "event": "claims",
+        "data": {
+          "attempt": 0,
+          "claims": [
+            {
+              "id": 0,
+              "text": "Yes, you can return them.",
+              "start": 0,
+              "end": 25
+            },
+            {
+              "id": 1,
+              "text": "Opened electronics can be returned within 30 days.",
+              "start": 26,
+              "end": 76
+            },
+            {
+              "id": 2,
+              "text": "We hope this helps!",
+              "start": 77,
+              "end": 96
+            }
+          ]
+        }
+      },
+      {
+        "event": "claim_checked",
+        "data": {
+          "attempt": 0,
+          "claim": {
+            "id": 0,
+            "text": "Yes, you can return them.",
+            "start": 0,
+            "end": 25,
+            "status": "SUPPORTED",
+            "checked_by": "deterministic",
+            "reason": "Non-factual sentence",
+            "evidence": []
+          }
+        }
+      },
+      {
+        "event": "claim_checked",
+        "data": {
+          "attempt": 0,
+          "claim": {
+            "id": 1,
+            "text": "Opened electronics can be returned within 30 days.",
+            "start": 26,
+            "end": 76,
+            "status": "CONTRADICTED",
+            "checked_by": "deterministic",
+            "reason": "Policy says 15 days.",
+            "evidence": [
+              {
+                "source": "refund_policy.md",
+                "version": "v2",
+                "text": "Opened electronics can be returned within 15 days.",
+                "chunk_id": "refund_policy.md#2"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "event": "claim_checked",
+        "data": {
+          "attempt": 0,
+          "claim": {
+            "id": 2,
+            "text": "We hope this helps!",
+            "start": 77,
+            "end": 96,
+            "status": "SUPPORTED",
+            "checked_by": "deterministic",
+            "reason": "Non-factual sentence",
+            "evidence": []
+          }
+        }
+      },
+      {
+        "event": "correcting",
+        "data": {
+          "attempt": 1,
+          "feedback": "Claim 1 contradicted. Use 15 days instead."
+        }
+      },
+      {
+        "event": "corrected_draft",
+        "data": {
+          "attempt": 1,
+          "text": "Yes, you can return them.\nOpened electronics can be returned within 15 days.\nWe hope this helps!"
+        }
+      },
+      {
+        "event": "final",
+        "data": {
+          "answer": "Yes, you can return them.\nOpened electronics can be returned within 15 days.\nWe hope this helps!",
+          "status": "CORRECTED",
+          "abstain_reason": null
+        }
+      },
+      {
+        "event": "run_finished",
+        "data": {
+          "result": {
+            "run_id": "run-1234",
+            "question": "Can I return my opened headphones after 20 days?",
+            "chaos": true,
+            "draft": "Yes, you can return them.\nOpened electronics can be returned within 30 days.\nWe hope this helps!",
+            "claims": [
+              {
+                "id": 0,
+                "text": "Yes, you can return them.",
+                "start": 0,
+                "end": 25,
+                "status": "SUPPORTED",
+                "checked_by": "deterministic",
+                "reason": "Non-factual sentence",
+                "evidence": []
+              },
+              {
+                "id": 1,
+                "text": "Opened electronics can be returned within 30 days.",
+                "start": 26,
+                "end": 76,
+                "status": "CONTRADICTED",
+                "checked_by": "deterministic",
+                "reason": "Policy says 15 days.",
+                "evidence": [
+                  {
+                    "source": "refund_policy.md",
+                    "version": "v2",
+                    "text": "Opened electronics can be returned within 15 days.",
+                    "chunk_id": "refund_policy.md#2"
+                  }
+                ]
+              },
+              {
+                "id": 2,
+                "text": "We hope this helps!",
+                "start": 77,
+                "end": 96,
+                "status": "SUPPORTED",
+                "checked_by": "deterministic",
+                "reason": "Non-factual sentence",
+                "evidence": []
+              }
+            ],
+            "final_draft": "Yes, you can return them.\nOpened electronics can be returned within 15 days.\nWe hope this helps!",
+            "final_claims": [
+              {
+                "id": 0,
+                "text": "Yes, you can return them.",
+                "start": 0,
+                "end": 25,
+                "status": "SUPPORTED",
+                "checked_by": "deterministic",
+                "reason": "Non-factual sentence",
+                "evidence": []
+              },
+              {
+                "id": 1,
+                "text": "Opened electronics can be returned within 15 days.",
+                "start": 26,
+                "end": 76,
+                "status": "SUPPORTED",
+                "checked_by": "deterministic",
+                "reason": "Matches policy exactly.",
+                "evidence": [
+                  {
+                    "source": "refund_policy.md",
+                    "version": "v2",
+                    "text": "Opened electronics can be returned within 15 days.",
+                    "chunk_id": "refund_policy.md#2"
+                  }
+                ]
+              },
+              {
+                "id": 2,
+                "text": "We hope this helps!",
+                "start": 77,
+                "end": 96,
+                "status": "SUPPORTED",
+                "checked_by": "deterministic",
+                "reason": "Non-factual sentence",
+                "evidence": []
+              }
+            ],
+            "final_answer": "Yes, you can return them.\nOpened electronics can be returned within 15 days.\nWe hope this helps!",
+            "final_status": "CORRECTED",
+            "abstain_reason": null,
+            "retries": 1,
+            "latency_ms": {
+              "retrieve": 100,
+              "maker": 500,
+              "check": 50,
+              "judge": 0,
+              "correct": 600,
+              "total": 1250
+            },
+            "tokens": {
+              "maker": 100,
+              "judge": 0
+            },
+            "policy_versions": {
+              "refund_policy.md": "v2"
+            },
+            "created_at": "2026-09-29T12:00:00Z"
+          }
+        }
+      }
+    ],
+    "delivered": [
+      {
+        "event": "run_started",
+        "data": {
+          "question": "Can I get a refund?",
+          "chaos": false
+        }
+      },
+      {
+        "event": "retrieved",
+        "data": {
+          "evidence": [
+            {
+              "source": "refund_policy.md",
+              "version": "v2",
+              "text": "Refunds are allowed within 15 days of purchase.",
+              "chunk_id": "refund_policy.md#1"
+            }
+          ]
+        }
+      },
+      {
+        "event": "draft",
+        "data": {
+          "text": "Refunds are allowed within 15 days of purchase."
+        }
+      },
+      {
+        "event": "claims",
+        "data": {
+          "attempt": 0,
+          "claims": [
+            {
+              "id": 0,
+              "text": "Refunds are allowed within 15 days of purchase.",
+              "start": 0,
+              "end": 47
+            }
+          ]
+        }
+      },
+      {
+        "event": "claim_checked",
+        "data": {
+          "attempt": 0,
+          "claim": {
+            "id": 0,
+            "text": "Refunds are allowed within 15 days of purchase.",
+            "start": 0,
+            "end": 47,
+            "status": "SUPPORTED",
+            "checked_by": "deterministic",
+            "reason": "Matches exactly.",
+            "evidence": [
+              {
+                "source": "refund_policy.md",
+                "version": "v2",
+                "text": "Refunds are allowed within 15 days of purchase.",
+                "chunk_id": "refund_policy.md#1"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "event": "final",
+        "data": {
+          "answer": "Refunds are allowed within 15 days of purchase.",
+          "status": "DELIVERED",
+          "abstain_reason": null
+        }
+      },
+      {
+        "event": "run_finished",
+        "data": {
+          "result": {
+            "run_id": "run-1235",
+            "question": "Can I get a refund?",
+            "chaos": false,
+            "draft": "Refunds are allowed within 15 days of purchase.",
+            "claims": [
+              {
+                "id": 0,
+                "text": "Refunds are allowed within 15 days of purchase.",
+                "start": 0,
+                "end": 47,
+                "status": "SUPPORTED",
+                "checked_by": "deterministic",
+                "reason": "Matches exactly.",
+                "evidence": [
+                  {
+                    "source": "refund_policy.md",
+                    "version": "v2",
+                    "text": "Refunds are allowed within 15 days of purchase.",
+                    "chunk_id": "refund_policy.md#1"
+                  }
+                ]
+              }
+            ],
+            "final_draft": "Refunds are allowed within 15 days of purchase.",
+            "final_claims": [
+              {
+                "id": 0,
+                "text": "Refunds are allowed within 15 days of purchase.",
+                "start": 0,
+                "end": 47,
+                "status": "SUPPORTED",
+                "checked_by": "deterministic",
+                "reason": "Matches exactly.",
+                "evidence": [
+                  {
+                    "source": "refund_policy.md",
+                    "version": "v2",
+                    "text": "Refunds are allowed within 15 days of purchase.",
+                    "chunk_id": "refund_policy.md#1"
+                  }
+                ]
+              }
+            ],
+            "final_answer": "Refunds are allowed within 15 days of purchase.",
+            "final_status": "DELIVERED",
+            "abstain_reason": null,
+            "retries": 0,
+            "latency_ms": {
+              "retrieve": 100,
+              "maker": 500,
+              "check": 50,
+              "judge": 0,
+              "correct": 0,
+              "total": 650
+            },
+            "tokens": {
+              "maker": 50,
+              "judge": 0
+            },
+            "policy_versions": {
+              "refund_policy.md": "v2"
+            },
+            "created_at": "2026-09-29T12:05:00Z"
+          }
+        }
+      }
+    ],
+    "abstained": [
+      {
+        "event": "run_started",
+        "data": {
+          "question": "Do you offer drone delivery?",
+          "chaos": false
+        }
+      },
+      {
+        "event": "retrieved",
+        "data": {
+          "evidence": []
+        }
+      },
+      {
+        "event": "draft",
+        "data": {
+          "text": "Yes, we offer drone delivery in select areas."
+        }
+      },
+      {
+        "event": "claims",
+        "data": {
+          "attempt": 0,
+          "claims": [
+            {
+              "id": 0,
+              "text": "Yes, we offer drone delivery in select areas.",
+              "start": 0,
+              "end": 45
+            }
+          ]
+        }
+      },
+      {
+        "event": "claim_checked",
+        "data": {
+          "attempt": 0,
+          "claim": {
+            "id": 0,
+            "text": "Yes, we offer drone delivery in select areas.",
+            "start": 0,
+            "end": 45,
+            "status": "UNSUPPORTED",
+            "checked_by": "llm",
+            "reason": "No mention of drone delivery.",
+            "evidence": []
+          }
+        }
+      },
+      {
+        "event": "final",
+        "data": {
+          "answer": "I couldn't verify this from VeriCorp's policies. Please contact support.",
+          "status": "ABSTAINED",
+          "abstain_reason": "UNSUPPORTED"
+        }
+      },
+      {
+        "event": "run_finished",
+        "data": {
+          "result": {
+            "run_id": "run-1236",
+            "question": "Do you offer drone delivery?",
+            "chaos": false,
+            "draft": "Yes, we offer drone delivery in select areas.",
+            "claims": [
+              {
+                "id": 0,
+                "text": "Yes, we offer drone delivery in select areas.",
+                "start": 0,
+                "end": 45,
+                "status": "UNSUPPORTED",
+                "checked_by": "llm",
+                "reason": "No mention of drone delivery.",
+                "evidence": []
+              }
+            ],
+            "final_draft": "Yes, we offer drone delivery in select areas.",
+            "final_claims": [
+              {
+                "id": 0,
+                "text": "Yes, we offer drone delivery in select areas.",
+                "start": 0,
+                "end": 45,
+                "status": "UNSUPPORTED",
+                "checked_by": "llm",
+                "reason": "No mention of drone delivery.",
+                "evidence": []
+              }
+            ],
+            "final_answer": "I couldn't verify this from VeriCorp's policies. Please contact support.",
+            "final_status": "ABSTAINED",
+            "abstain_reason": "UNSUPPORTED",
+            "retries": 0,
+            "latency_ms": {
+              "retrieve": 100,
+              "maker": 500,
+              "check": 50,
+              "judge": 400,
+              "correct": 0,
+              "total": 1050
+            },
+            "tokens": {
+              "maker": 50,
+              "judge": 100
+            },
+            "policy_versions": {},
+            "created_at": "2026-09-29T12:10:00Z"
+          }
+        }
+      }
+    ]
+  }
+}

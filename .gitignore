@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# VeriTrust specific
+.chroma/
+veritrust.db
+veritrust.db-journal
+veritrust.db-wal
+veritrust.db-shm
+node_modules/
+.next/
+generate_mocks.py
