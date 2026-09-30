@@ -7,6 +7,8 @@ import { CustomerQuestion } from "@/components/CustomerQuestion";
 import { DocumentReview } from "@/components/DocumentReview";
 import { EvidenceRail } from "@/components/EvidenceRail";
 import { getScenarioRunResult, ScenarioKey } from "@/lib/mockEvents";
+import { useAsk } from "@/hooks/useAsk";
+import { AskBar } from "@/components/AskBar";
 
 export default function ReviewPage() {
   const [currentScenario, setCurrentScenario] = useState<ScenarioKey>("corrected");
@@ -15,9 +17,12 @@ export default function ReviewPage() {
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>("ref-01");
 
   // Load the current scenario run result from frozen mocks/events.json
-  const runResult = React.useMemo(() => {
+  const mockResult = React.useMemo(() => {
     return getScenarioRunResult(currentScenario);
   }, [currentScenario]);
+
+  const { run, status, error, ask } = useAsk();
+  const runResult = run || mockResult;
 
   const handleScenarioChange = (scenario: ScenarioKey) => {
     setCurrentScenario(scenario);
@@ -58,7 +63,11 @@ export default function ReviewPage() {
         {/* Column 2: Dominant central document */}
         <section className="flex-1 overflow-y-auto px-8 py-8 flex flex-col items-center bg-[#fff8f0]">
           <div className="w-full max-w-[720px] flex flex-col gap-6">
-            <CustomerQuestion
+            <AskBar status={status} error={error} onAsk={(q) => ask(q, chaosActive, currentScenario)} />
+            
+            {runResult && (
+              <>
+                <CustomerQuestion
               question={runResult.question}
               isChaos={chaosActive}
             />
@@ -68,7 +77,9 @@ export default function ReviewPage() {
               viewMode={viewMode}
               onSelectClaim={handleSelectClaim}
               selectedClaimId={selectedClaimId}
-            />
+              />
+            </>
+            )}
           </div>
         </section>
 
