@@ -119,3 +119,19 @@ def test_check_prices_wrong():
     assert res.status == "CONTRADICTED"
     assert len(res.evidence) == 1
     assert res.evidence[0] == ev_refund
+
+def test_deterministic_check_exact_match():
+    from backend.agents.checker import deterministic_check, ClaimSpan, Evidence
+    
+    claim = ClaimSpan(id=1, text="A restocking fee of ₹250 applies to opened electronics returns.", start=0, end=63)
+    ev = Evidence(source="refund_policy.md", version="v1", text="A restocking fee of ₹250 applies to opened electronics returns.", chunk_id="refund_policy.md#4")
+    
+    # Question has no numbers matching the claim
+    question = "Can I return my opened headphones after 20 days?"
+    
+    res = deterministic_check(claim, [ev], question)
+    
+    assert res is not None
+    assert res.status == "SUPPORTED"
+    assert res.reason == "Exact match with policy chunk."
+    assert res.evidence == [ev]

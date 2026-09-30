@@ -211,3 +211,78 @@ def test_correct_draft_basic():
     prompt = calls[0].kwargs.get("prompt") or calls[0].args[3]
     assert "what is the question?" in prompt
     assert "- 'bad claim': CONTRADICTED (nope). Contradicting evidence: none" in prompt
+
+
+def test_correct_draft_validation_and_retry():
+    from backend.agents.maker import correct_draft
+    from backend.contracts import Claim, Evidence
+    
+    bad_fake = _fake_response(response="This is sentence one. This is sentence two.")
+    good_fake = _fake_response(response="Corrected text here with 15 days.")
+    
+    mock_client = MagicMock()
+    mock_client.generate.side_effect = [bad_fake, good_fake]
+    
+    ev1 = Evidence(source="p.md", version="v1", text="Opened electronics can be returned within 15 days.", chunk_id="1")
+    c = Claim(
+        id=1, text="bad claim", start=0, end=9,
+        status="CONTRADICTED", checked_by="llm", reason="nope", evidence=[ev1]
+    )
+    
+    with patch("backend.agents.maker._build_client", return_value=mock_client):
+        draft, tokens = correct_draft("question", "old draft", [c], [ev1])
+        
+    assert draft == "Corrected text here with 15 days."
+    assert mock_client.generate.call_count == 2
+    
+    call_options = mock_client.generate.call_args_list[0].kwargs.get("options", {})
+    assert call_options.get("temperature") == 0.0
+
+def test_correct_draft_verbatim_fallback():
+    from backend.agents.maker import correct_draft
+    from backend.contracts import Claim, Evidence
+    
+    bad_fake = _fake_response(response="This is sentence one. This is sentence two.")
+    mock_client = MagicMock()
+    mock_client.generate.return_value = bad_fake
+    
+    ev1 = Evidence(source="p.md", version="v1", text="Original chunk text with 15 days.", chunk_id="1")
+    c = Claim(
+        id=1, text="bad claim", start=0, end=9,
+        status="CONTRADICTED", checked_by="llm", reason="nope", evidence=[ev1]
+    )
+    
+    with patch("backend.agents.maker._build_client", return_value=mock_client):
+        draft, tokens = correct_draft("question", "old draft", [c], [ev1])
+        
+    assert mock_client.generate.call_count == 2
+    assert draft == "Original chunk text with 15 days."
+    assert tokens.get("fallback") == 1
+    assert tokens.get("reason") == "fallback verbatim"
+
+def test_correct_draft_filters_evidence():
+    from backend.agents.maker import correct_draft
+    from backend.contracts import Claim, Evidence
+    
+    ev1 = Evidence(source="p.md", version="v1", text="Cited chunk 99 days.", chunk_id="1")
+    ev2 = Evidence(source="p.md", version="v1", text="Unrelated chunk 1.", chunk_id="2")
+    ev3 = Evidence(source="p.md", version="v1", text="Unrelated chunk 2.", chunk_id="3")
+    ev4 = Evidence(source="p.md", version="v1", text="Unrelated chunk 3.", chunk_id="4")
+    
+    c = Claim(
+        id=1, text="bad claim", start=0, end=9,
+        status="CONTRADICTED", checked_by="llm", reason="nope", evidence=[ev4]
+    )
+    
+    good_fake = _fake_response(response="Corrected text here with 99 days and 3.")
+    mock_client = MagicMock()
+    mock_client.generate.return_value = good_fake
+    
+    with patch("backend.agents.maker._build_client", return_value=mock_client):
+        draft, tokens = correct_draft("question", "old draft", [c], [ev1, ev2, ev3, ev4])
+        
+    prompt = mock_client.generate.call_args_list[0].kwargs.get("prompt") or mock_client.generate.call_args_list[0].args[3]
+    assert "Unrelated chunk 3." in prompt
+    assert "Cited chunk 99 days." in prompt
+    assert "Unrelated chunk 1." in prompt
+    assert "Unrelated chunk 2." not in prompt

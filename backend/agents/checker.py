@@ -124,6 +124,16 @@ def get_relevant_text(claim_text: str, echo_quants: list[dict]) -> str:
     return claim_text
 
 def deterministic_check(claim: ClaimSpan, evidence: list[Evidence], question: str) -> Claim | None:
+    # Exact match check
+    for ev in evidence:
+        if claim.text.strip() == ev.text.strip():
+            return Claim(
+                id=claim.id, text=claim.text, start=claim.start, end=claim.end,
+                status="SUPPORTED", checked_by="deterministic", 
+                reason="Exact match with policy chunk.", 
+                evidence=[ev]
+            )
+
     if is_non_factual(claim.text):
         return Claim(
             id=claim.id, text=claim.text, start=claim.start, end=claim.end,

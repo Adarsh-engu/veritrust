@@ -81,7 +81,7 @@ Answer:"""
 # Correction template — used by correct_draft in Phase 6
 _CORRECT_TEMPLATE = """\
 You are a VeriCorp customer-service agent.
-Change only the wrong value or statement to what the evidence says. Keep every other sentence. Do not add facts. If the question asks about a time window the customer mentions, restate it (e.g. 'so a 20-day-old purchase is outside the return window'). At most 3 sentences, no markdown.
+The rewrite must be ONE sentence that states the corrected policy fact and, if the customer's question contains a number, relates it to that number in the same sentence (e.g. "Opened electronics can be returned within 15 days, so a 20-day-old purchase is outside the return window."). No new facts, no denials, no separate sentences. Do not add markdown.
 
 Question: {question}
 Previous answer: {draft}
@@ -139,6 +139,7 @@ def _generate(
     prompt: str,
     timeout_s: int,
     keep_alive: str,
+    temperature: float = 0.85,
 ) -> tuple[str, int, int, int]:
     """
     Call Ollama generate (non-streaming).
@@ -158,7 +159,7 @@ def _generate(
             stream=False,
             keep_alive=keep_alive,
             options={
-                "temperature": 0.85,
+                "temperature": temperature,
                 "num_predict": 256,
             },
         )
@@ -259,26 +260,76 @@ def correct_draft(
     _keep_alive = keep_alive or config.OLLAMA_KEEP_ALIVE
 
     feedback_lines = []
+    cited_evidence = []
     for c in failing_claims:
-        ev_texts = [e.text for e in getattr(c, "evidence", [])]
+        evs = getattr(c, "evidence", [])
+        ev_texts = [e.text for e in evs]
         ev_str = " | ".join(ev_texts) if ev_texts else "none"
         feedback_lines.append(f"- '{c.text}': {c.status} ({c.reason}). Contradicting evidence: {ev_str}")
+        for e in evs:
+            if not any(ex.chunk_id == e.chunk_id for ex in cited_evidence):
+                cited_evidence.append(e)
+                
+    for e in evidence[:2]:
+        if not any(ex.chunk_id == e.chunk_id for ex in cited_evidence):
+            cited_evidence.append(e)
+            
+    cited_evidence = cited_evidence[:3]
+        
     feedback = "\n".join(feedback_lines)
-
     prompt = _CORRECT_TEMPLATE.format(
         question=question,
         draft=draft,
         feedback=feedback,
-        context=_format_context(evidence),
+        context=_format_context(cited_evidence),
     )
 
     client = _build_client(_host)
-    text, prompt_tokens, eval_count, eval_duration_ms = _generate(
-        client, _model, "", prompt, _timeout_s, _keep_alive
-    )
+    
+    total_prompt_tokens = 0
+    total_eval_count = 0
+    total_eval_duration = 0
+    
+    def _is_valid(t: str) -> bool:
+        if _count_sentences(t) != 1:
+            return False
+        lt = t.lower()
+        if "i cannot" in lt or "unable" in lt:
+            return False
+        ev_text = " ".join(e.text for e in cited_evidence)
+        ev_nums = set(_re.findall(r"\d+", ev_text))
+        if ev_nums:
+            t_nums = set(_re.findall(r"\d+", t))
+            if not (ev_nums & t_nums):
+                return False
+        return True
 
+    text = ""
+    for _ in range(2):
+        t, pt, ec, ed = _generate(
+            client, _model, "", prompt, _timeout_s, _keep_alive, temperature=0.0
+        )
+        total_prompt_tokens += pt
+        total_eval_count += ec
+        total_eval_duration += ed
+        
+        if _is_valid(t):
+            text = t
+            break
+
+    if not text:
+        # Fallback to verbatim
+        text = evidence[0].text if evidence else draft
+        return text, {
+            "maker": total_prompt_tokens + total_eval_count,
+            "eval_count": total_eval_count,
+            "eval_duration_ms": total_eval_duration,
+            "fallback": 1,
+            "reason": "fallback verbatim",
+        }
+        
     return text, {
-        "maker": prompt_tokens + eval_count,
-        "eval_count": eval_count,
-        "eval_duration_ms": eval_duration_ms,
+        "maker": total_prompt_tokens + total_eval_count,
+        "eval_count": total_eval_count,
+        "eval_duration_ms": total_eval_duration,
     }
