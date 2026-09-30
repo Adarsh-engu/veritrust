@@ -127,14 +127,14 @@ Runs in code before any LLM call.
 | Every claim quantity has an equal-valued comparable evidence quantity AND content-word overlap with that evidence sentence ≥ `DET_SUPPORT_OVERLAP` (default 0.6) | SUPPORTED (`checked_by="deterministic"`) |
 | Anything else | unresolved → LLM judge |
 
-Thresholds live in one config module and are tuned in Phase 5 and Phase 12. Tuning is not a contract change. The deterministic result is never overridden by the LLM. Quantities that also appear in the customer's question are exempt from the CONTRADICTED decision, so a draft that restates the customer's own number (e.g. 'your purchase is 20 days old') is not blocked. The checker receives the question for this purpose only.
+Thresholds live in one config module and are tuned in Phase 5 and Phase 12. Tuning is not a contract change. The deterministic result is never overridden by the LLM. Quantities that also appear in the customer's question are ignored for all deterministic decisions (CONTRADICTED and SUPPORTED), so a draft that restates the customer's own number (e.g. 'your purchase is 20 days old') is not blocked. The checker receives the question for this purpose only. For the SUPPORTED overlap check, drop only clauses that contain an echo quantity (a quantity that also appears in the customer's question). All other clauses, including clauses with no numbers, stay in the overlap calculation. A claim with an extra unsupported clause must therefore not pass as SUPPORTED.
 
 ### 7.6 llm_judge
 One call per unresolved claim, with only that claim and the retrieved evidence. The question and the Maker's full draft are NOT shown to the Judge (this also blocks prompt injection in the question). Runs in parallel up to `JUDGE_CONCURRENCY`. Output is strict JSON validated by Pydantic (`JudgeOutput`, section 8).
 
 Guards:
 - `SUPPORTED` requires at least one `evidence_ids` entry that exists in the evidence provided. Otherwise it is downgraded to UNSUPPORTED.
-- If the claim contains numbers and a SUPPORTED verdict cites a chunk that does not contain a comparable equal value, downgrade to UNSUPPORTED.
+- If the claim contains numbers (ignoring quantities that also appear in the customer's question) and a SUPPORTED verdict cites a chunk that does not contain a comparable equal value, downgrade to UNSUPPORTED. The judge receives the question for this purpose only.
 - Invalid JSON: retry once, then the claim becomes UNSUPPORTED.
 - Timeout: `OLLAMA_TIMEOUT_S`, treated the same as invalid JSON.
 - Identical calls (same claim, same chunk ids, same policy versions, same model) are served from an in-memory cache.
@@ -432,8 +432,8 @@ No API keys anywhere. Model names, hosts, ports and paths are never hardcoded in
 | 2 | Policies and retrieval | D | 9–10 of 10 questions return the right rank-1 chunk |
 | 3 | Frontend scaffold and customer chat (mock) | F | click-through on mock scenarios |
 | 4 | Maker and chaos mode, model choice, latency | A | chaos gives wrong numbers reliably; latency measured |
-| 5 | Claim splitting and deterministic checker | A | 10+ hand-written drafts give expected verdicts; splitter edge cases; exempts question quantities |
-| 6 | LLM judge and correction | A | JSON validity over 20 calls; guards tested |
+| 5 | Claim splitting and deterministic checker | A | 10+ hand-written drafts give expected verdicts; splitter edge cases; overlap filter drops echo clauses |
+| 6 | LLM judge and correction | A | JSON validity over 20 calls; guards tested including echo-number |
 | 7 | LangGraph pipeline and SQLite logging | C | forced failing case stops after 2 retries; DB rows inspected |
 | 8 | Review screen with tracked changes (mock) | F | all three scenarios render correctly |
 | 9 | FastAPI, SSE, ledger and policy endpoints | C | curl showing the full SSE sequence for a real run |
