@@ -198,7 +198,7 @@ def node_check(state: PipelineState) -> dict:
             claim = Claim(
                 id=span.id, text=span.text, start=span.start, end=span.end,
                 status="UNSUPPORTED", checked_by="deterministic",
-                reason="Corrector could not find an answer", evidence=[],
+                reason="Model could not find an answer", evidence=[],
             )
             stats = {"tokens": 0}
         else:

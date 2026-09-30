@@ -14,24 +14,22 @@ export default function ReviewPage() {
   const [currentScenario, setCurrentScenario] = useState<ScenarioKey>("corrected");
   const [viewMode, setViewMode] = useState<"reviewer" | "customer">("reviewer");
   const [chaosActive, setChaosActive] = useState<boolean>(true);
-  const [selectedClaimId, setSelectedClaimId] = useState<string | null>("ref-01");
+  const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
 
   // Load the current scenario run result from frozen mocks/events.json
   const mockResult = React.useMemo(() => {
     return getScenarioRunResult(currentScenario);
   }, [currentScenario]);
 
-  const { run, status, error, ask } = useAsk();
+  const { run, status, error, ask, currentStage, stageStatuses } = useAsk();
+
+  // Use live run if available, else mock
   const runResult = run || mockResult;
 
   const handleScenarioChange = (scenario: ScenarioKey) => {
     setCurrentScenario(scenario);
-    if (scenario === "corrected") {
-      setChaosActive(true);
-    } else {
-      setChaosActive(false);
-    }
-    setSelectedClaimId("ref-01");
+    setChaosActive(scenario === "corrected");
+    setSelectedClaimId(null);
   };
 
   const handleChaosToggle = () => {
@@ -39,12 +37,12 @@ export default function ReviewPage() {
   };
 
   const handleSelectClaim = (id: string) => {
-    setSelectedClaimId(id);
+    setSelectedClaimId((prev) => (prev === id ? null : id));
   };
 
   return (
     <div className="bg-[#faf8f0] text-on-surface antialiased font-sans h-screen flex flex-col overflow-hidden">
-      {/* Top minimal navigation bar matching Stitch */}
+      {/* Top navigation bar */}
       <Header
         activeTab="review"
         viewMode={viewMode}
@@ -57,28 +55,39 @@ export default function ReviewPage() {
 
       {/* Main three-column workspace */}
       <main className="flex-1 flex overflow-hidden">
-        {/* Column 1: Left minimal timeline */}
-        <Timeline runResult={runResult} />
+        {/* Column 1: Left live timeline */}
+        <Timeline
+          runResult={runResult}
+          stageStatuses={status === "running" || status === "done" ? stageStatuses : undefined}
+          currentStage={currentStage}
+        />
 
-        {/* Column 2: Dominant central document */}
+        {/* Column 2: Central document */}
         <section className="flex-1 overflow-y-auto px-8 py-8 flex flex-col items-center bg-[#fff8f0]">
           <div className="w-full max-w-[720px] flex flex-col gap-6">
-            <AskBar status={status} error={error} onAsk={(q) => ask(q, chaosActive, currentScenario)} />
-            
+            <AskBar
+              status={status}
+              error={error}
+              onAsk={(q) => {
+                setSelectedClaimId(null);
+                ask(q, chaosActive, currentScenario);
+              }}
+            />
+
             {runResult && (
               <>
                 <CustomerQuestion
-              question={runResult.question}
-              isChaos={chaosActive}
-            />
+                  question={runResult.question}
+                  isChaos={runResult.chaos ?? chaosActive}
+                />
 
-            <DocumentReview
-              runResult={runResult}
-              viewMode={viewMode}
-              onSelectClaim={handleSelectClaim}
-              selectedClaimId={selectedClaimId}
-              />
-            </>
+                <DocumentReview
+                  runResult={runResult}
+                  viewMode={viewMode}
+                  onSelectClaim={handleSelectClaim}
+                  selectedClaimId={selectedClaimId}
+                />
+              </>
             )}
           </div>
         </section>
