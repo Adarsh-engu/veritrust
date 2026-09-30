@@ -21,10 +21,9 @@ export const DocumentReview: React.FC<DocumentReviewProps> = ({
   const isAbstained = runResult.final_status === "ABSTAINED";
   const isDelivered = runResult.final_status === "DELIVERED";
 
-  // Policies cited
-  const policyEntries = Object.entries(runResult.policy_versions);
-  const primarySource = policyEntries.length > 0 ? policyEntries[0][0] : "refund_policy.md";
-  const primaryVersion = policyEntries.length > 0 ? policyEntries[0][1] : "v1";
+  const firstEvidence = runResult.final_claims?.find(c => c.evidence?.length > 0)?.evidence[0];
+  const primarySource = firstEvidence?.source || "refund_policy.md";
+  const primaryVersion = firstEvidence?.version || "v1";
 
   // Compute word-level diff for tracked changes
   const diffSegments = React.useMemo(() => {
@@ -148,19 +147,21 @@ export const DocumentReview: React.FC<DocumentReviewProps> = ({
       </article>
 
       {/* 3. Subtle, clickable verification badge below document */}
-      <div className="flex justify-center">
-        <button
-          type="button"
-          onClick={() => onSelectClaim("ref-01")}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface-dim border border-outline-dim font-mono text-[11px] text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
-        >
-          <span className="text-accent-green font-semibold">✓</span>
-          <span>
-            Verified against <code className="text-on-surface font-medium">{primarySource}</code> ·{" "}
-            {primaryVersion}
-          </span>
-        </button>
-      </div>
+      {!isAbstained && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => onSelectClaim("ref-01")}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface-dim border border-outline-dim font-mono text-[11px] text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+          >
+            <span className="text-accent-green font-semibold">✓</span>
+            <span>
+              Verified against <code className="text-on-surface font-medium">{primarySource}</code> ·{" "}
+              {primaryVersion}
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

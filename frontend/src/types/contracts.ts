@@ -74,15 +74,71 @@ export type SSEEventName =
   | "run_finished"
   | "error";
 
-export interface MockEvent<T = unknown> {
-  event: SSEEventName;
-  data: T;
+export interface EventRunStarted {
+  run_id: string;
+  question: string;
+  chaos: boolean;
 }
+
+export interface EventRetrieved {
+  evidence: Evidence[];
+}
+
+export interface EventDraft {
+  text: string;
+}
+
+export interface EventClaims {
+  attempt: number;
+  claims: ClaimSpan[];
+}
+
+export interface EventClaimChecked {
+  attempt: number;
+  claim: Claim;
+}
+
+export interface EventCorrecting {
+  attempt: number;
+  feedback: string;
+}
+
+export interface EventCorrectedDraft {
+  attempt: number;
+  text: string;
+}
+
+export interface EventFinal {
+  answer: string;
+  status: FinalStatus;
+  abstain_reason: AbstainReason | null;
+}
+
+export interface EventRunFinished {
+  result: RunResult;
+}
+
+export interface EventError {
+  code: "BUSY" | "OLLAMA_DOWN" | "TIMEOUT" | "INTERNAL";
+  message: string;
+}
+
+export type ServerEvent =
+  | { event: "run_started"; data: EventRunStarted }
+  | { event: "retrieved"; data: EventRetrieved }
+  | { event: "draft"; data: EventDraft }
+  | { event: "claims"; data: EventClaims }
+  | { event: "claim_checked"; data: EventClaimChecked }
+  | { event: "correcting"; data: EventCorrecting }
+  | { event: "corrected_draft"; data: EventCorrectedDraft }
+  | { event: "final"; data: EventFinal }
+  | { event: "run_finished"; data: EventRunFinished }
+  | { event: "error"; data: EventError };
 
 export interface MockScenarios {
   scenarios: {
-    corrected: MockEvent[];
-    delivered: MockEvent[];
-    abstained: MockEvent[];
+    corrected: ServerEvent[];
+    delivered: ServerEvent[];
+    abstained: ServerEvent[];
   };
 }

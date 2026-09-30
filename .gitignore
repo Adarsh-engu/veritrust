@@ -14,8 +14,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -226,3 +226,4 @@ veritrust.db-shm
 node_modules/
 .next/
 generate_mocks.py
+.env.example
