@@ -73,16 +73,26 @@ export async function* askStream(
 }
 
 export function getMockRunResult(scenario: "corrected" | "delivered" | "abstained"): RunResult {
-  if (process.env.NEXT_PUBLIC_USE_MOCKS === "true") {
-    const rawEvents = require("../../mocks/events.json");
-    const events = rawEvents.scenarios[scenario] as ServerEvent[];
-    const finished = events?.find((e): e is Extract<ServerEvent, { event: "run_finished" }> => e.event === "run_finished");
-    if (finished) return finished.data.result;
-  }
+  // Fallback hardcoded result — used when mocks are disabled or events.json has no run_finished
   return {
-    run_id: "run-fallback", question: "Can I return opened headphones after 20 days?", chaos: true, draft: "Opened electronics can be returned within 30 days.", claims: [], final_draft: "Opened electronics can be returned within 15 days.", final_claims: [], final_answer: "Opened electronics can be returned within 15 days.", final_status: "CORRECTED", abstain_reason: null, retries: 1, latency_ms: { retrieve: 100, maker: 500, check: 50, judge: 0, correct: 600, total: 1250 }, tokens: { maker: 100, judge: 0 }, policy_versions: { "refund_policy.md": "v2" }, created_at: new Date().toISOString()
+    run_id: "run-fallback",
+    question: "Can I return opened headphones after 20 days?",
+    chaos: true,
+    draft: "Opened electronics can be returned within 30 days.",
+    claims: [],
+    final_draft: "Opened electronics can be returned within 15 days.",
+    final_claims: [],
+    final_answer: "Opened electronics can be returned within 15 days.",
+    final_status: "CORRECTED",
+    abstain_reason: null,
+    retries: 1,
+    latency_ms: { retrieve: 100, maker: 500, check: 50, judge: 0, correct: 600, total: 1250 },
+    tokens: { maker: 100, judge: 0 },
+    policy_versions: { "refund_policy.md": "v1" },
+    created_at: new Date().toISOString(),
   };
 }
+
 
 const getBaseUrl = () => process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
