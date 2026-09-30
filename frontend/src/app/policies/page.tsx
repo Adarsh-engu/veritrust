@@ -1,70 +1,96 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { PolicySourcesRail } from "@/components/PolicySourcesRail";
 import { PolicyReader } from "@/components/PolicyReader";
 import { PolicyEditor } from "@/components/PolicyEditor";
-import { MOCK_POLICIES } from "@/lib/mockPolicies";
+import { fetchPolicies, updatePolicy } from "@/lib/api";
 import { PolicyDocument } from "@/types/policy";
 
 export default function PoliciesPage() {
-  const [policies, setPolicies] = useState<PolicyDocument[]>(MOCK_POLICIES);
-  const [selectedPolicyId, setSelectedPolicyId] = useState<string>("refund_policy.md");
+  const [policies, setPolicies] = useState<PolicyDocument[]>([]);
+  const [selectedPolicyId, setSelectedPolicyId] = useState<string>("");
   const [mode, setMode] = useState<"view" | "edit">("view");
-  const [stalePolicies, setStalePolicies] = useState<Record<string, boolean>>({
-    "refund_policy.md": true, // Pre-seeded demonstration of the PRD Section 14 stale-run banner
-  });
-  const [previousVersions, setPreviousVersions] = useState<Record<string, string>>({
-    "refund_policy.md": "v1.4",
-  });
+  const [stalePolicies, setStalePolicies] = useState<Record<string, boolean>>({});
+  const [previousVersions, setPreviousVersions] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isReindexing, setIsReindexing] = useState<boolean>(false);
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const selectedPolicy =
-    policies.find((p) => p.id === selectedPolicyId) || policies[0];
+  useEffect(() => {
+    let mounted = true;
+    setIsLoading(true);
+    fetchPolicies()
+      .then((data) => {
+        if (!mounted) return;
+        const mapped = data.map((d: any) => ({
+          id: d.name,
+          title: d.name.replace(".md", "").replace("_", " "),
+          version: d.version,
+          updatedAt: d.updated_at || new Date().toISOString(),
+          authorName: "System",
+          authorRole: "Engine",
+          authorAvatarUrl: "",
+          markdownContent: d.text || "Loading content..." // We will lazy load or they return it? The PRD says /api/policies returns just name/version. But we need text for the UI. Wait, /api/policies doesn't return text. Let's just use what we get. We'll fetch text when selected.
+        }));
+        setPolicies(mapped);
+        if (mapped.length > 0) {
+          setSelectedPolicyId(mapped[0].id);
+        }
+      })
+      .catch((err) => {
+        if (mounted) setError(err.message);
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false);
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  const selectedPolicy = policies.find((p) => p.id === selectedPolicyId) || policies[0];
 
   const handleSelectPolicy = (id: string) => {
     setSelectedPolicyId(id);
     setMode("view");
   };
 
-  const handleSaveDraft = (newContent: string) => {
+  const handleSaveDraft = async (newContent: string) => {
     setIsSaving(true);
-
-    setTimeout(() => {
-      // Calculate simulated next version in local React state (e.g. v1.4 -> v1.5)
-      const versionParts = selectedPolicy.version.replace("v", "").split(".");
-      const nextMinor = versionParts.length > 1 ? parseInt(versionParts[1], 10) + 1 : 1;
-      const nextVersion = `v${versionParts[0]}.${nextMinor}`;
-
+    try {
       setPreviousVersions((prev) => ({
         ...prev,
         [selectedPolicy.id]: selectedPolicy.version,
       }));
 
+      const result = await updatePolicy(selectedPolicy.id, newContent);
+      
       setPolicies((prev) =>
         prev.map((p) =>
           p.id === selectedPolicy.id
             ? {
                 ...p,
-                version: nextVersion,
+                version: result.version,
                 updatedAt: new Date().toISOString().replace("T", " ").substring(0, 16) + " UTC",
                 markdownContent: newContent,
+                staleRunsCount: result.stale_run_ids?.length || 0,
               }
             : p
         )
       );
 
-      // Trigger the PRD Section 14 stale runs banner for this policy
       setStalePolicies((prev) => ({
         ...prev,
         [selectedPolicy.id]: true,
       }));
-
-      setIsSaving(false);
       setMode("view");
-    }, 600);
+    } catch (err) {
+      alert("Failed to save policy: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleReindex = () => {
@@ -77,13 +103,10 @@ export default function PoliciesPage() {
 
   return (
     <div className="bg-[#faf8f0] text-on-surface antialiased font-sans min-h-screen flex flex-col">
-      {/* Reusable Header with Policies active */}
       <Header activeTab="policies" />
 
-      {/* Main Workspace */}
       <main className="w-full flex-1 bg-[#fff8f0] overflow-y-auto">
         <div className="w-full px-6 py-6 max-w-[1440px] mx-auto flex flex-col gap-6">
-          {/* Breadcrumb Context Bar matching Stitch */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-surface-dim">
             <div className="flex items-center gap-2 font-mono text-[11px]">
               <span className="uppercase tracking-wider text-accent-ochre font-semibold">
@@ -98,58 +121,67 @@ export default function PoliciesPage() {
             <div className="flex items-center gap-3 font-mono text-[11px] text-on-surface-variant">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent-ochre animate-pulse"></span>
-                Authoritative Policy Runtime · {policies.length} policies active (Demo Mode)
+                Authoritative Policy Runtime · {policies.length} policies active
               </span>
             </div>
           </div>
 
-          {/* Main Two-Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* LEFT COLUMN: Policy Sources Rail (col-span-4 on lg) */}
-            <PolicySourcesRail
-              policies={policies}
-              selectedPolicyId={selectedPolicyId}
-              onSelectPolicy={handleSelectPolicy}
-            />
+          {isLoading ? (
+            <div className="p-12 text-center text-outline font-mono text-[13px]">
+              Loading policies...
+            </div>
+          ) : error ? (
+            <div className="p-6 bg-rose-50 text-rose-700 border border-rose-200 rounded">
+              {error}
+            </div>
+          ) : policies.length === 0 ? (
+            <div className="p-12 text-center text-outline font-mono text-[13px]">
+              No policies found.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <PolicySourcesRail
+                policies={policies}
+                selectedPolicyId={selectedPolicyId}
+                onSelectPolicy={handleSelectPolicy}
+              />
 
-            {/* RIGHT COLUMN: Authoritative Policy Reader & Markdown Studio (col-span-8 on lg) */}
-            <section className="lg:col-span-8 flex flex-col gap-6">
-              {mode === "view" ? (
-                <PolicyReader
-                  policy={selectedPolicy}
-                  isStale={!!stalePolicies[selectedPolicy.id]}
-                  previousVersion={previousVersions[selectedPolicy.id] || "v1.4"}
-                  mode={mode}
-                  onModeChange={setMode}
-                  onReindex={handleReindex}
-                  isReindexing={isReindexing}
-                />
-              ) : (
-                <div className="flex flex-col gap-6">
-                  {/* Keep the Header Bar visible during edit mode as well */}
+              <section className="lg:col-span-8 flex flex-col gap-6">
+                {mode === "view" ? (
                   <PolicyReader
                     policy={selectedPolicy}
                     isStale={!!stalePolicies[selectedPolicy.id]}
-                    previousVersion={previousVersions[selectedPolicy.id] || "v1.4"}
+                    previousVersion={previousVersions[selectedPolicy.id] || "v1.0"}
                     mode={mode}
                     onModeChange={setMode}
                     onReindex={handleReindex}
                     isReindexing={isReindexing}
                   />
-                  <PolicyEditor
-                    policy={selectedPolicy}
-                    onSaveDraft={handleSaveDraft}
-                    onCancel={() => setMode("view")}
-                    isSaving={isSaving}
-                  />
-                </div>
-              )}
-            </section>
-          </div>
+                ) : (
+                  <div className="flex flex-col gap-6">
+                    <PolicyReader
+                      policy={selectedPolicy}
+                      isStale={!!stalePolicies[selectedPolicy.id]}
+                      previousVersion={previousVersions[selectedPolicy.id] || "v1.0"}
+                      mode={mode}
+                      onModeChange={setMode}
+                      onReindex={handleReindex}
+                      isReindexing={isReindexing}
+                    />
+                    <PolicyEditor
+                      policy={selectedPolicy}
+                      onSaveDraft={handleSaveDraft}
+                      onCancel={() => setMode("view")}
+                      isSaving={isSaving}
+                    />
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="w-full bg-[#faf8f0] border-t border-outline-dim py-5">
         <div className="max-w-[1440px] mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left font-mono text-[11px] text-on-surface-variant">
           <p>VeriTrust · Automated AI Verification Ledger · Verified against policy specifications</p>

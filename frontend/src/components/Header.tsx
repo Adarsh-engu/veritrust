@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { ScenarioKey } from "@/lib/mockEvents";
+import { useHealth } from "@/hooks/useHealth";
 
 interface HeaderProps {
   activeTab?: "review" | "ledger" | "policies";
@@ -23,6 +24,7 @@ export const Header: React.FC<HeaderProps> = ({
   currentScenario = "corrected",
   onScenarioChange,
 }) => {
+  const isHealthy = useHealth();
   return (
     <header className="h-13 py-2.5 px-6 border-b border-outline-dim bg-[#fff8f0]/95 backdrop-blur-sm shrink-0 flex items-center justify-between z-20">
       <div className="flex items-center gap-7">
@@ -158,8 +160,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Engine live status indicator */}
         <div className="flex items-center gap-2 text-[11px] font-mono text-on-surface-variant">
-          <span className="text-accent-ochre">●</span>
-          <span>Verification service · Connected</span>
+          <span className={isHealthy ? "text-accent-green" : "text-accent-rose"}>●</span>
+          <span>Verification service · {isHealthy ? "Connected" : "Offline"}</span>
         </div>
       </div>
     </header>
