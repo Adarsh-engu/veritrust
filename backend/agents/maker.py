@@ -80,11 +80,13 @@ Answer:"""
 
 # Correction template — used by correct_draft in Phase 6
 _CORRECT_TEMPLATE = """\
-You are a VeriCorp customer-service agent. Rewrite the answer using ONLY the evidence.
-Max 3 sentences. No markdown, no lists, no greetings. Remove any claim not in evidence.
+You are a VeriCorp customer-service agent.
+Change only the wrong value or statement to what the evidence says. Keep every other sentence. Do not add facts. If the question asks about a time window the customer mentions, restate it (e.g. 'so a 20-day-old purchase is outside the return window'). At most 3 sentences, no markdown.
 
+Question: {question}
 Previous answer: {draft}
-Errors: {feedback}
+Errors:
+{feedback}
 Evidence:
 {context}
 
@@ -238,6 +240,7 @@ def make_draft(
 
 
 def correct_draft(
+    question: str,
     draft: str,
     failing_claims: list,
     evidence: list,
@@ -249,12 +252,33 @@ def correct_draft(
 ) -> tuple[str, dict[str, int]]:
     """
     Rewrite the draft fixing failing claims, grounded only in evidence.
-
-    STUB — interface defined here; full implementation in Phase 6.
-
-    Raises NotImplementedError until Phase 6.
     """
-    raise NotImplementedError(
-        "correct_draft is a Phase 6 deliverable. "
-        "This stub defines the interface only."
+    _model = model or config.MAKER_MODEL
+    _host = host or config.OLLAMA_HOST
+    _timeout_s = timeout_s if timeout_s is not None else config.OLLAMA_TIMEOUT_S
+    _keep_alive = keep_alive or config.OLLAMA_KEEP_ALIVE
+
+    feedback_lines = []
+    for c in failing_claims:
+        ev_texts = [e.text for e in getattr(c, "evidence", [])]
+        ev_str = " | ".join(ev_texts) if ev_texts else "none"
+        feedback_lines.append(f"- '{c.text}': {c.status} ({c.reason}). Contradicting evidence: {ev_str}")
+    feedback = "\n".join(feedback_lines)
+
+    prompt = _CORRECT_TEMPLATE.format(
+        question=question,
+        draft=draft,
+        feedback=feedback,
+        context=_format_context(evidence),
     )
+
+    client = _build_client(_host)
+    text, prompt_tokens, eval_count, eval_duration_ms = _generate(
+        client, _model, "", prompt, _timeout_s, _keep_alive
+    )
+
+    return text, {
+        "maker": prompt_tokens + eval_count,
+        "eval_count": eval_count,
+        "eval_duration_ms": eval_duration_ms,
+    }

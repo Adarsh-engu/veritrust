@@ -151,7 +151,7 @@ def deterministic_check(claim: ClaimSpan, evidence: list[Evidence], question: st
     
     for cq in non_echo_c_quants:
         found_exact = None
-        found_diff = False
+        contradicting_ev = None
         
         for ev in evidence:
             e_quants = extract_quantities(ev.text)
@@ -162,18 +162,18 @@ def deterministic_check(claim: ClaimSpan, evidence: list[Evidence], question: st
                             if overlap_ratio(relevant_claim_text, ev.text) >= config.DET_SUPPORT_OVERLAP:
                                 found_exact = ev
                         else:
-                            found_diff = True
+                            contradicting_ev = ev
                             
         if found_exact:
             supporting_evidence.append(found_exact)
         else:
             has_support_for_all = False
-            if found_diff:
+            if contradicting_ev:
                 return Claim(
                     id=claim.id, text=claim.text, start=claim.start, end=claim.end,
                     status="CONTRADICTED", checked_by="deterministic", 
                     reason=f"Conflicts with policy (claimed {cq['raw']}).", 
-                    evidence=[]
+                    evidence=[contradicting_ev]
                 )
 
     if has_support_for_all:

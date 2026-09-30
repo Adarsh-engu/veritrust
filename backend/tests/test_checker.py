@@ -20,6 +20,8 @@ def test_check_30_days_vs_15_days():
     res = deterministic_check(c, [ev_refund], "")
     assert res is not None
     assert res.status == "CONTRADICTED"
+    assert len(res.evidence) == 1
+    assert res.evidence[0] == ev_refund
 
 def test_check_15_days_correct():
     c = create_claim("Opened electronics can be returned within 15 days.")
@@ -115,3 +117,5 @@ def test_check_prices_wrong():
     res = deterministic_check(c, [ev_refund], "")
     assert res is not None
     assert res.status == "CONTRADICTED"
+    assert len(res.evidence) == 1
+    assert res.evidence[0] == ev_refund

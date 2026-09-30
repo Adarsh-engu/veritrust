@@ -181,3 +181,33 @@ def test_count_sentences_decimal_not_split():
 
 def test_count_sentences_exclamation():
     assert _count_sentences("Great! We can help. Contact us anytime!") == 3
+
+# ---------------------------------------------------------------------------
+# correct_draft tests (Phase 6)
+# ---------------------------------------------------------------------------
+
+def test_correct_draft_basic():
+    from backend.agents.maker import correct_draft
+    from backend.contracts import Claim
+    
+    fake = _fake_response(response="Corrected text here.")
+    mock_client = MagicMock()
+    mock_client.generate.return_value = fake
+    
+    c = Claim(
+        id=1, text="bad claim", start=0, end=9,
+        status="CONTRADICTED", checked_by="llm", reason="nope", evidence=[]
+    )
+    
+    with patch("backend.agents.maker._build_client", return_value=mock_client):
+        draft, tokens = correct_draft("what is the question?", "old draft", [c], [])
+        
+    assert draft == "Corrected text here."
+    assert "eval_count" in tokens
+    assert tokens["eval_duration_ms"] == 3000
+    
+    calls = mock_client.generate.call_args_list
+    assert len(calls) == 1
+    prompt = calls[0].kwargs.get("prompt") or calls[0].args[3]
+    assert "what is the question?" in prompt
+    assert "- 'bad claim': CONTRADICTED (nope). Contradicting evidence: none" in prompt

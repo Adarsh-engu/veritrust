@@ -140,7 +140,7 @@ Guards:
 - Identical calls (same claim, same chunk ids, same policy versions, same model) are served from an in-memory cache.
 
 ### 7.7 correct
-The Maker rewrites the draft using the evidence, the failing claims and the reasons. Correction may remove statements it cannot support. The corrected draft goes back through `split_claims` and both checkers. After 2 corrections the run abstains with `RETRY_CAP`.
+The Maker rewrites the draft using the evidence, the failing claims and the reasons. `correct` receives the customer question, and correction is a minimal edit: change only the failing claim(s) to what the evidence says, keep supported sentences, and never add facts that are not in the evidence. Correction runs only for CONTRADICTED claims (UNSUPPORTED abstains, per 7.9). The corrected draft goes back through `split_claims` and both checkers. After 2 corrections the run abstains with `RETRY_CAP`.
 
 ### 7.8 abstain
 Fixed safe message (constant in `contracts.py`): "I couldn't verify this from VeriCorp's policies. Please contact support." Abstain reasons: `UNSUPPORTED`, `RETRY_CAP`, `SYSTEM_ERROR`.
