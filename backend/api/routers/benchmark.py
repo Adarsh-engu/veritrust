@@ -43,7 +43,7 @@ async def run_benchmark_endpoint(req: BenchmarkRequest, request: Request):
             
         def worker():
             try:
-                res = run_benchmark(req.modes, limit=None, callback=callback)
+                res = run_benchmark(req.modes, limit=20, callback=callback)
                 asyncio.run_coroutine_threadsafe(queue.put(("summary", res)), loop)
             except Exception as e:
                 asyncio.run_coroutine_threadsafe(queue.put(("exception", str(e))), loop)

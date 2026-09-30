@@ -143,7 +143,7 @@ export const PolicyReader: React.FC<PolicyReaderProps> = ({
           {/* Document Meta Header inside reader */}
           <div className="flex items-center justify-between pb-3 border-b border-surface-dim">
             <span className="font-mono text-[10px] text-outline uppercase tracking-wider font-semibold">
-              Policy Chunk Partitioning · {policy.chunks.length} Chunks
+              Policy Chunk Partitioning · {policy.chunks?.length || 0} Chunks
             </span>
             <span className="font-mono text-[10px] text-on-surface-variant bg-surface-muted px-2 py-0.5 rounded border border-outline-dim/60">
               Authoritative Runtime Clauses
@@ -152,7 +152,7 @@ export const PolicyReader: React.FC<PolicyReaderProps> = ({
 
           {/* Render Chunks with Gutter Partitioning */}
           <div className="flex flex-col gap-6 divide-y divide-surface-dim">
-            {policy.chunks.map((chunk, idx) => (
+            {(policy.chunks || []).map((chunk, idx) => (
               <div
                 key={chunk.id}
                 className={`grid grid-cols-1 md:grid-cols-12 gap-5 items-start pt-6 first:pt-0 ${

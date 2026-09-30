@@ -19,9 +19,9 @@ export const PolicySourcesRail: React.FC<PolicySourcesRailProps> = ({
   const filteredPolicies = policies.filter((p) => {
     const term = searchTerm.toLowerCase();
     return (
-      p.name.toLowerCase().includes(term) ||
-      p.summary.toLowerCase().includes(term) ||
-      p.version.toLowerCase().includes(term)
+      (p.name ?? "").toLowerCase().includes(term) ||
+      (p.summary ?? "").toLowerCase().includes(term) ||
+      (p.version ?? "").toLowerCase().includes(term)
     );
   });
 
