@@ -135,7 +135,9 @@ export const Timeline: React.FC<TimelineProps> = ({ runResult }) => {
                 isAbstained ? "bg-accent-rose" : "bg-accent-green"
               }`}
             ></span>
-            <div className="font-mono text-[11px] font-semibold text-on-surface">5. Verified</div>
+            <div className="font-mono text-[11px] font-semibold text-on-surface">
+              {isAbstained ? "5. Abstained" : "5. Verified"}
+            </div>
             <div
               className={`font-mono text-[10px] mt-0.5 ${
                 isAbstained ? "text-accent-rose" : "text-accent-green"

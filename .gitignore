@@ -226,3 +226,4 @@ veritrust.db-shm
 node_modules/
 .next/
 generate_mocks.py
+.env.example
