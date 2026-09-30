@@ -12,7 +12,7 @@ from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 import ollama
 
 from backend.contracts import Evidence
-from backend.retrieval.document_parser import PolicyDocument, load_all_policies
+from backend.retrieval.document_parser import PolicyDocument, load_all_policies, parse_policy_file
 
 # Configuration defaults matching .env.example
 CHROMA_DIR = os.getenv("CHROMA_DIR", "./.chroma")
@@ -212,3 +212,59 @@ def query_collection(
         )
 
     return evidence_list
+
+
+def reindex_policy(
+    name: str,
+    policies_dir: Optional[str] = None,
+    collection: Optional[Collection] = None,
+) -> int:
+    """
+    Re-indexes a single policy by name.
+
+    Deletes all existing ChromaDB chunks whose ``chunk_id`` starts with
+    ``"{name}#"`` (i.e. belongs to this policy file), then parses the
+    current ``.md`` file from disk and upserts its chunks atomically.
+
+    Used when a policy is updated at runtime (PRD §6 runtime versioning and
+    ``PUT /api/policies/{name}``).
+
+    Args:
+        name: Policy filename, e.g. ``"refund_policy.md"``.  The ``.md``
+              suffix is optional — if omitted it is appended automatically.
+        policies_dir: Directory containing policy ``.md`` files.
+                      Defaults to ``POLICIES_DIR`` env var.
+        collection: Target Chroma collection.  Defaults to
+                    ``get_policy_collection()``.
+
+    Returns:
+        int: Number of chunks upserted for this policy after re-indexing.
+
+    Raises:
+        FileNotFoundError: If the policy file does not exist on disk.
+    """
+    if not name.endswith(".md"):
+        name = f"{name}.md"
+
+    if collection is None:
+        collection = get_policy_collection()
+
+    target_dir = policies_dir or os.getenv("POLICIES_DIR", POLICIES_DIR)
+    file_path = Path(target_dir) / name
+
+    if not file_path.exists():
+        raise FileNotFoundError(f"Policy file not found: {file_path}")
+
+    # 1. Find and delete all existing chunks for this policy.
+    #    ChromaDB's where-filter on metadata is the safe, stable API.
+    existing = collection.get(
+        where={"source": name},
+        include=[],  # ids only — no need to fetch documents
+    )
+    existing_ids: list[str] = existing.get("ids", [])
+    if existing_ids:
+        collection.delete(ids=existing_ids)
+
+    # 2. Parse the current file from disk and upsert its chunks.
+    doc = parse_policy_file(file_path)
+    return index_policy_documents(documents=[doc], collection=collection)

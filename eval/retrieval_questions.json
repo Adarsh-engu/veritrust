@@ -1,0 +1,75 @@
+{
+  "description": "Phase 2 retrieval evaluation set. 5 direct + 5 paraphrased questions. expected_chunk_id is the rank-1 chunk that must be returned.",
+  "questions": [
+    {
+      "id": "D01",
+      "category": "direct",
+      "question": "How many days do I have to return a product?",
+      "expected_source": "refund_policy.md",
+      "expected_chunk_id": "refund_policy.md#1"
+    },
+    {
+      "id": "D02",
+      "category": "direct",
+      "question": "What is the warranty period for VeriCorp laptops?",
+      "expected_source": "warranty_policy.md",
+      "expected_chunk_id": "warranty_policy.md#1"
+    },
+    {
+      "id": "D03",
+      "category": "direct",
+      "question": "How long does standard shipping take?",
+      "expected_source": "shipping_policy.md",
+      "expected_chunk_id": "shipping_policy.md#1"
+    },
+    {
+      "id": "D04",
+      "category": "direct",
+      "question": "What payment methods does VeriCorp accept?",
+      "expected_source": "payments_policy.md",
+      "expected_chunk_id": "payments_policy.md#1"
+    },
+    {
+      "id": "D05",
+      "category": "direct",
+      "question": "Can I cancel my order after it has already shipped?",
+      "expected_source": "cancellation_policy.md",
+      "expected_chunk_id": "cancellation_policy.md#3"
+    },
+    {
+      "id": "P01",
+      "category": "paraphrased",
+      "question": "Is there a fee charged when I send back opened electronics?",
+      "expected_source": "refund_policy.md",
+      "expected_chunk_id": "refund_policy.md#4"
+    },
+    {
+      "id": "P02",
+      "category": "paraphrased",
+      "question": "Who covers the cost of sending a broken item back to VeriCorp?",
+      "expected_source": "refund_policy.md",
+      "expected_chunk_id": "refund_policy.md#7"
+    },
+    {
+      "id": "P03",
+      "category": "paraphrased",
+      "question": "How quickly does expedited delivery arrive?",
+      "expected_source": "shipping_policy.md",
+      "expected_chunk_id": "shipping_policy.md#2"
+    },
+    {
+      "id": "P04",
+      "category": "paraphrased",
+      "question": "What hours can I reach VeriCorp support by phone?",
+      "expected_source": "support_policy.md",
+      "expected_chunk_id": "support_policy.md#1"
+    },
+    {
+      "id": "P05",
+      "category": "paraphrased",
+      "question": "How long is the manufacturer guarantee on VeriCorp desktop computers?",
+      "expected_source": "warranty_policy.md",
+      "expected_chunk_id": "warranty_policy.md#1"
+    }
+  ]
+}

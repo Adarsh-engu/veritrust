@@ -6,7 +6,7 @@ effective_date: 2026-09-01
 ---
 - Orders can be cancelled freely within 2 hours of placement through the customer account.
 - Unshipped orders can be cancelled online at any time before dispatch without penalty.
-- Cancellations requested after dispatch cannot be approved while the package is in transit.
+- Orders that have already shipped cannot be cancelled.
 - Customers may refuse delivery at their doorstep if cancellation was requested after shipment.
 - Cancelled unshipped orders receive a full 100 percent refund to the original payment method.
 - Refunds for orders cancelled prior to shipment are initiated within 2 business days.

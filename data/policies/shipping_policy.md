@@ -13,6 +13,5 @@ effective_date: 2026-09-01
 - Same-day delivery carries an additional fee of ₹299 per order.
 - VeriCorp ships to all domestic pin codes across India through verified logistics partners.
 - VeriCorp does not currently support international delivery outside India.
-- Drone delivery is not supported or offered for any orders.
 - A tracking number is sent via SMS and email within 12 hours of order dispatch.
 - Orders placed on Sundays or national holidays are dispatched on the next business day.
